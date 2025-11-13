@@ -186,6 +186,18 @@ def get_techs():
     return jsonify(techs_schema.dump(techs, many=True)), 200
 
 
+# delete tech by id
+@app.route("/tech/<int:id>", methods=["DELETE"])
+def delete_tech(id):
+    tech = db.session.get(Tech, id)
+    if not tech:
+        return jsonify({"Error": "Tech not found"}), 404
+
+    db.session.delete(tech)
+    db.session.commit()
+    return jsonify({"Message": "Tech deleted"}), 200
+
+
 # Run the app
 if __name__ == "__main__":
     app.run(debug=True)
