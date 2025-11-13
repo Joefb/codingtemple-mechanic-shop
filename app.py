@@ -23,6 +23,7 @@ db = SQLAlchemy(model_class=Base)
 # Init the extension onto the Flask app
 db.init_app(app)  # This adds the db to the app.
 
+# Create association table for many-to-many relationship between Tech and Invoice
 tech_invoices = Table(
     "tech_invoices",
     Base.metadata,
@@ -84,4 +85,5 @@ with app.app_context():
 
 
 # Run the app
-app.run()
+if __name__ == "__main__":
+    app.run(debug=True)
