@@ -156,6 +156,21 @@ with app.app_context():
     db.create_all()  # Create the database and the database table(s)
 
 
+## TEC ROUTES ##
+# create tech
+@app.route("/tech", methods=["POST"])
+def create_tech():
+    try:
+        data = tech_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    new_tech = Tech(**data)
+    db.session.add(new_tech)
+    db.session.commit()
+    return tech_schema.jsonify(new_tech), 201
+
+
 # Run the app
 if __name__ == "__main__":
     app.run(debug=True)
