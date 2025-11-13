@@ -12,7 +12,7 @@
 
 ## ERD
 
-![erd](./erd.png)
+![erd pic](./ERD.png)
 
 ## Links
 
