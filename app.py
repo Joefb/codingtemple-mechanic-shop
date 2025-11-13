@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import String, Float, ForeignKey, Table, Column, Date
+from datetime import date
 
 
 # Create Flask application instance
@@ -23,17 +24,34 @@ db = SQLAlchemy(model_class=Base)
 db.init_app(app)  # This adds the db to the app.
 
 
-class Users(Base):
-    __tablename__ = "users"
+class Customer(Base):
+    __tablename__ = "customers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    password: Mapped[str] = mapped_column(String(50), nullable=False)
     email: Mapped[str] = mapped_column(String(100), nullable=False, unique=False)
-    dob: Mapped[str] = mapped_column(String(25), nullable=False)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False)
     address: Mapped[str] = mapped_column(String(200), nullable=False)
-    role: Mapped[str] = mapped_column(String(50))
+
+    # Create relationship to Invoice
+    invoices: Mapped[list["Invoice"]] = relationship(
+        "Invoice", back_populates="customer"
+    )
+
+
+class Invoice(Base):
+    __tablename__ = "invoices"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(String(200), nullable=False)
+    total_cost: Mapped[float] = mapped_column(Float, nullable=False)
+    vehicle: Mapped[str] = mapped_column(String(200), nullable=False)
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
+
+    # Create relationship to Customer
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="invoices")
 
 
 with app.app_context():
