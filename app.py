@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Float, ForeignKey, Table, Column, Date
 from datetime import date
-
+from flask_marshmallow import Marshmallow  # Importing Marshmallow class
+from marshmallow import ValidationError
 
 # Create Flask application instance
 app = Flask(__name__)
@@ -20,8 +21,12 @@ class Base(DeclarativeBase):
 # Create a instance of the database
 db = SQLAlchemy(model_class=Base)
 
+# Init Marshmallow with the Flask app
+ma = Marshmallow()
+
 # Init the extension onto the Flask app
 db.init_app(app)  # This adds the db to the app.
+ma.init_app(app)  # This adds Marshmallow to the app.
 
 # Create association table for many-to-many relationship between Tech and Invoice
 tech_invoices = Table(
@@ -78,6 +83,28 @@ class Tech(Base):
     invoices: Mapped[list["Invoice"]] = relationship(
         "Invoice", secondary="tech_invoices", back_populates="techs"
     )
+
+
+# Create schemas for serialization
+class CustomerSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Customer
+
+
+class InvoiceSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Invoice
+
+
+class TechSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Tech
+
+
+# Create instances of the schemas
+customer_schema = CustomerSchema()
+invoice_schema = InvoiceSchema()
+tech_schema = TechSchema()
 
 
 with app.app_context():
