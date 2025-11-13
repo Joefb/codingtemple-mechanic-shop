@@ -171,6 +171,13 @@ def create_tech():
     return tech_schema.jsonify(new_tech), 201
 
 
+# get tech by id
+@app.route("/tech/<int:id>", methods=["GET"])
+def get_tech(id):
+    tech = db.session.get(Tech, id)
+    return tech_schema.jsonify(tech), 200
+
+
 # Run the app
 if __name__ == "__main__":
     app.run(debug=True)
