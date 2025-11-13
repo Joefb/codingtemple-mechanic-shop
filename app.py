@@ -48,7 +48,7 @@ class Customer(Base):
     address: Mapped[str] = mapped_column(String(200), nullable=False)
 
     # Create relationship to Invoice
-    invoice: Mapped[list["Invoice"]] = relationship(
+    invoices: Mapped[list["Invoice"]] = relationship(
         "Invoice", back_populates="customer"
     )
 
@@ -105,6 +105,22 @@ class TechSchema(ma.SQLAlchemyAutoSchema):
 customer_schema = CustomerSchema()
 invoice_schema = InvoiceSchema()
 tech_schema = TechSchema()
+
+# Create routes
+
+
+# Create customer route
+@app.route("/customers", methods=["POST"])
+def create_customer():
+    try:
+        data = customer_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    new_customer = Customer(**data)
+    db.session.add(new_customer)
+    db.session.commit()
+    return customer_schema.jsonify(new_customer), 201
 
 
 with app.app_context():
