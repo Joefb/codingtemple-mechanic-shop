@@ -103,6 +103,7 @@ class TechSchema(ma.SQLAlchemyAutoSchema):
 
 # Create instances of the schemas
 customer_schema = CustomerSchema()
+customers_schema = CustomerSchema(many=True)
 invoice_schema = InvoiceSchema()
 tech_schema = TechSchema()
 
@@ -130,6 +131,25 @@ def create_customer():
 def get_customer(id):
     customer = db.session.get(Customer, id)
     return customer_schema.jsonify(customer), 200
+
+
+# get customers list
+@app.route("/customer", methods=["GET"])
+def get_users():
+    customers = db.session.query(Customer).all()
+    return customers_schema.jsonify(customers), 200
+
+
+# delete customer by id
+@app.route("/customer/<int:id>", methods=["DELETE"])
+def delete_customer(id):
+    customer = db.session.get(Customer, id)
+    if not customer:
+        return jsonify({"Error": "Customer not found"}), 404
+
+    db.session.delete(customer)
+    db.session.commit()
+    return jsonify({"Message": "Customer deleted"}), 200
 
 
 with app.app_context():
