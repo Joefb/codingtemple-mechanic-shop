@@ -106,11 +106,13 @@ customer_schema = CustomerSchema()
 invoice_schema = InvoiceSchema()
 tech_schema = TechSchema()
 
-# Create routes
+
+### ROUTES ###
 
 
-# Create customer route
-@app.route("/customers", methods=["POST"])
+# CUSTOMER ROUTES
+# creat customer
+@app.route("/customer", methods=["POST"])
 def create_customer():
     try:
         data = customer_schema.load(request.json)
@@ -121,6 +123,13 @@ def create_customer():
     db.session.add(new_customer)
     db.session.commit()
     return customer_schema.jsonify(new_customer), 201
+
+
+# get customer by id
+@app.route("/customer/<int:id>", methods=["GET"])
+def get_customer(id):
+    customer = db.session.get(Customer, id)
+    return customer_schema.jsonify(customer), 200
 
 
 with app.app_context():
