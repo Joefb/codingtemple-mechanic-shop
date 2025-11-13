@@ -106,6 +106,7 @@ customer_schema = CustomerSchema()
 customers_schema = CustomerSchema(many=True)
 invoice_schema = InvoiceSchema()
 tech_schema = TechSchema()
+techs_schema = TechSchema(many=True)
 
 
 ### ROUTES ###
@@ -176,6 +177,13 @@ def create_tech():
 def get_tech(id):
     tech = db.session.get(Tech, id)
     return tech_schema.jsonify(tech), 200
+
+
+# get techs list
+@app.route("/tech", methods=["GET"])
+def get_techs():
+    techs = db.session.query(Tech).all()
+    return jsonify(techs_schema.dump(techs, many=True)), 200
 
 
 # Run the app
