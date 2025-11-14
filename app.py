@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 
 
-# Create a bass class for our models
+# Create a base class for our models
 class Base(DeclarativeBase):
     pass
 
@@ -57,7 +57,7 @@ class Invoice(Base):
     __tablename__ = "invoices"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)  # Format YYYY-MM-DD
     status: Mapped[str] = mapped_column(String(200), nullable=False)
     total_cost: Mapped[float] = mapped_column(Float, nullable=False)
     vehicle: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -105,6 +105,7 @@ class TechSchema(ma.SQLAlchemyAutoSchema):
 customer_schema = CustomerSchema()
 customers_schema = CustomerSchema(many=True)
 invoice_schema = InvoiceSchema()
+invoices_schema = InvoiceSchema(many=True)
 tech_schema = TechSchema()
 techs_schema = TechSchema(many=True)
 
@@ -150,11 +151,25 @@ def delete_customer(id):
 
     db.session.delete(customer)
     db.session.commit()
-    return jsonify({"Message": "Customer deleted"}), 200
+    return jsonify({"Success": "Customer deleted"}), 200
 
 
-with app.app_context():
-    db.create_all()  # Create the database and the database table(s)
+@app.route("/customer/<int:id>", methods=["PUT"])
+def update_customer(id):
+    customer = db.session.get(Customer, id)
+    if not customer:
+        return jsonify({"Error": "Customer not found"}), 404
+
+    try:
+        data = customer_schema.load(request.json, partial=True)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    for key, value in data.items():
+        setattr(customer, key, value)
+
+    db.session.commit()
+    return customer_schema.jsonify(customer), 200
 
 
 ## TEC ROUTES ##
@@ -195,8 +210,51 @@ def delete_tech(id):
 
     db.session.delete(tech)
     db.session.commit()
-    return jsonify({"Message": "Tech deleted"}), 200
+    return jsonify({"Success": "Tech deleted"}), 200
 
+
+## INVOICE ROUTES ##
+@app.route("/invoice", methods=["POST"])
+def create_invoice():
+    try:
+        data = invoice_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    new_invoice = Invoice(**data)
+    db.session.add(new_invoice)
+    db.session.commit()
+    return invoice_schema.jsonify(new_invoice), 201
+
+
+# get invoice by id
+@app.route("/invoice/<int:id>", methods=["GET"])
+def get_invoice(id):
+    invoice = db.session.get(Invoice, id)
+    return jsonify(invoice_schema.dump(invoice)), 200
+
+
+# get invoices
+@app.route("/invoice", methods=["GET"])
+def get_invoices():
+    invoices = db.session.query(Invoice).all()
+    return jsonify(invoices_schema.dump(invoices)), 200
+
+
+# delete invoices by id
+@app.route("/invoice/<int:id>", methods=["DELETE"])
+def delete_invoice(id):
+    invoice = db.session.get(Invoice, id)
+    if not invoice:
+        return jsonify({"Error": "Invoice not found"}), 400
+
+    db.session.delete(invoice)
+    db.session.commit()
+    return jsonify({"Success": "Invoice Deleted"}), 200
+
+
+with app.app_context():
+    db.create_all()  # Create the database and the database table(s)
 
 # Run the app
 if __name__ == "__main__":
