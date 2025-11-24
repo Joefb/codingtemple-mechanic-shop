@@ -6,6 +6,16 @@ from datetime import date
 from flask_marshmallow import Marshmallow  # Importing Marshmallow class
 from marshmallow import ValidationError
 
+# Limiter imports
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# Flask cache imports (if needed in future)
+from flask_caching import Cache
+
+# This will be imported when the app factory pattern is implemented
+from app.extensions import limiter
+
 # Create Flask application instance
 app = Flask(__name__)
 
@@ -21,12 +31,21 @@ class Base(DeclarativeBase):
 # Create a instance of the database
 db = SQLAlchemy(model_class=Base)
 
-# Init Marshmallow with the Flask app
+# Create Marshmallow instance
 ma = Marshmallow()
+
+# Create Limiter instance
+limiter = Limiter(get_remote_address, default_limits=["200 per day", "50 per hour"])
+
+# Create Cache instance (if needed in future)
+cache = Cache()
 
 # Init the extension onto the Flask app
 db.init_app(app)  # This adds the db to the app.
 ma.init_app(app)  # This adds Marshmallow to the app.
+limiter.init_app(app)
+cache.init_app(app)
+
 
 # Create association table for many-to-many relationship between Tech and Invoice
 tech_invoices = Table(
@@ -116,6 +135,7 @@ techs_schema = TechSchema(many=True)
 # CUSTOMER ROUTES
 # creat customer
 @app.route("/customer", methods=["POST"])
+@limiter.limit("2 per day")
 def create_customer():
     try:
         data = customer_schema.load(request.json)
