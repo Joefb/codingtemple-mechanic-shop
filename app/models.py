@@ -32,6 +32,7 @@ class Customer(Base):
     email: Mapped[str] = mapped_column(String(100), nullable=False, unique=False)
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
     address: Mapped[str] = mapped_column(String(200), nullable=False)
+    password: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Create relationship to Invoice
     invoices: Mapped[list["Invoice"]] = relationship(
@@ -64,6 +65,7 @@ class Tech(Base):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     position: Mapped[str] = mapped_column(String(50), nullable=False)
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
+    password: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # create relationship to invoice
     invoices: Mapped[list["Invoice"]] = relationship(

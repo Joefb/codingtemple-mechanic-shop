@@ -33,6 +33,7 @@ def get_invoice(id):
 # get invoices
 @invoices_bp.route("", methods=["GET"])
 @limiter.limit("200 per day")
+@cache.cached(timeout=500)
 def get_invoices():
     invoices = db.session.query(Invoice).all()
     return jsonify(invoices_schema.dump(invoices)), 200

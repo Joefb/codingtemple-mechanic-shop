@@ -7,13 +7,13 @@ from flask import request, jsonify
 SECRET_KEY = "super secret secrets"
 
 
-def encode_token(user_id, role="user"):
+def encode_token(customer_id):
     payload = {
         "exp": datetime.now(timezone.utc)
         + timedelta(days=0, hours=1),  # Set an expiration date of 1 hour from now
         "iat": datetime.now(timezone.utc),
-        "sub": str(user_id),  # VERY IMPORTANT, SET YOUR USER ID TO A STR
-        "role": role,  # You will probably not have role unless you add it to your models
+        "sub": str(customer_id),  # VERY IMPORTANT, SET YOUR USER ID TO A STR
+        # "role": role,  # You will probably not have role unless you add it to your models
     }
 
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
@@ -37,7 +37,7 @@ def token_required(f):  # f stands for the function that is getting wrapped
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             print(data)
-            request.logged_in_user_id = data[
+            request.logged_in_customer_id = data[
                 "sub"
             ]  # Adding the user_id from the token to the request
         except jose.exceptions.ExpiredSignatureError:

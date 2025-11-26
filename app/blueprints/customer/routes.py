@@ -1,13 +1,38 @@
 # Imports
 from app.models import db, Customer
-from .schemas import customer_schema, customers_schema
+from .schemas import customer_schema, customers_schema, login_schema
 from app.blueprints.customer import customers_bp
 from flask import jsonify, request
 from marshmallow import ValidationError
 from app.extensions import limiter, cache
+from werkzeug.security import check_password_hash, generate_password_hash
+from app.util.auth import encode_token, token_required
 
 
 # CUSTOMER ROUTES
+# customer login
+@customers_bp.route("/login", methods=["POST"])
+@limiter.limit("5 per 10 minute")
+def login():
+    try:
+        # get my user credentials - responsibility for my client
+        data = login_schema.load(request.json)  # JSON -> Python
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+
+    user = db.session.query(Customer).where(Customer.email == data["email"]).first()
+
+    if user and check_password_hash(user.password, data["password"]):
+        # Create token for user
+        token = encode_token(user.id)
+        return jsonify(
+            {
+                "message": f"Welcome {user.first_name}",
+                "token": token,
+            }
+        ), 200
+
+
 # create customer
 @customers_bp.route("", methods=["POST"])
 @limiter.limit("5 per day")
@@ -17,6 +42,9 @@ def create_customer():
     except ValidationError as err:
         return jsonify(err.messages), 400
 
+    data["password"] = generate_password_hash(
+        data["password"]
+    )  # resetting the password key's value, to the hash of the current value
     new_customer = Customer(**data)
     db.session.add(new_customer)
     db.session.commit()
@@ -42,6 +70,7 @@ def get_users():
 # delete customer by id
 @customers_bp.route("/<int:id>", methods=["DELETE"])
 @limiter.limit("5 per day")
+@token_required
 def delete_customer(id):
     customer = db.session.get(Customer, id)
     if not customer:
