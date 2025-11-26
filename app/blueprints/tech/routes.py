@@ -48,4 +48,20 @@ def delete_tech(id):
 
 
 # TODO: update tech by id
-# @techs_bp.route("/<int:id>", methods=["PUT"])
+@techs_bp.route("/<int:id>", methods=["PUT"])
+@limiter.limit("10 per day")
+def update_tech(id):
+    tech = db.session.get(Tech, id)
+    if not tech:
+        return jsonify({"Error": "Tech not found"}), 404
+
+    try:
+        data = tech_schema.load(request.json, partial=True)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    for key, value in data.items():
+        setattr(tech, key, value)
+
+    db.session.commit()
+    return tech_schema.jsonify(tech), 200

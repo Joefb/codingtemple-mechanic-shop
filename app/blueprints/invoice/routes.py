@@ -9,6 +9,7 @@ from app.extensions import limiter, cache
 # INVOICE ROUTES
 # create invoice
 @invoices_bp.route("", methods=["POST"])
+@limiter.limit("5 per day")
 def create_invoice():
     try:
         data = invoice_schema.load(request.json)
@@ -23,6 +24,7 @@ def create_invoice():
 
 # get invoice by id
 @invoices_bp.route("/<int:id>", methods=["GET"])
+@limiter.limit("200 per day")
 def get_invoice(id):
     invoice = db.session.get(Invoice, id)
     return jsonify(invoice_schema.dump(invoice)), 200
@@ -30,6 +32,7 @@ def get_invoice(id):
 
 # get invoices
 @invoices_bp.route("", methods=["GET"])
+@limiter.limit("200 per day")
 def get_invoices():
     invoices = db.session.query(Invoice).all()
     return jsonify(invoices_schema.dump(invoices)), 200
@@ -37,6 +40,7 @@ def get_invoices():
 
 # delete invoices by id
 @invoices_bp.route("/<int:id>", methods=["DELETE"])
+@limiter.limit("5 per day")
 def delete_invoice(id):
     invoice = db.session.get(Invoice, id)
     if not invoice:
@@ -45,3 +49,24 @@ def delete_invoice(id):
     db.session.delete(invoice)
     db.session.commit()
     return jsonify({"Success": "Invoice Deleted"}), 200
+
+
+# TODO: update invoice by id
+@invoices_bp.route("/<int:id>", methods=["PUT"])
+@limiter.limit("10 per day")
+def update_invoice(id):
+    invoice = db.session.get(Invoice, id)
+
+    if not invoice:
+        return jsonify({"Error": "Invoice not found"})
+
+    try:
+        data = invoice_schema.load(request.json, partial=True)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    for key, value in data.items():
+        setattr(invoice, key, value)
+
+    db.session.commit()
+    return invoice_schema.jsonify(invoice), 200
