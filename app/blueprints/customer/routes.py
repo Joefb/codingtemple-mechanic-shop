@@ -4,16 +4,13 @@ from .schemas import customer_schema, customers_schema
 from app.blueprints.customer import customers_bp
 from flask import jsonify, request
 from marshmallow import ValidationError
-
-
-# This will be imported when the app factory pattern is implemented
 from app.extensions import limiter, cache
 
 
 # CUSTOMER ROUTES
-# creat customer
+# create customer
 @customers_bp.route("", methods=["POST"])
-@limiter.limit("2 per day")
+@limiter.limit("5 per day")
 def create_customer():
     try:
         data = customer_schema.load(request.json)
@@ -28,6 +25,7 @@ def create_customer():
 
 # get customer by id
 @customers_bp.route("/<int:id>", methods=["GET"])
+@limiter.limit("200 per day")
 def get_customer(id):
     customer = db.session.get(Customer, id)
     return customer_schema.jsonify(customer), 200
@@ -35,6 +33,7 @@ def get_customer(id):
 
 # get customers list
 @customers_bp.route("", methods=["GET"])
+@limiter.limit("200 per day")
 def get_users():
     customers = db.session.query(Customer).all()
     return customers_schema.jsonify(customers), 200
@@ -42,6 +41,7 @@ def get_users():
 
 # delete customer by id
 @customers_bp.route("/<int:id>", methods=["DELETE"])
+@limiter.limit("5 per day")
 def delete_customer(id):
     customer = db.session.get(Customer, id)
     if not customer:
@@ -53,6 +53,7 @@ def delete_customer(id):
 
 
 @customers_bp.route("/<int:id>", methods=["PUT"])
+@limiter.limit("10 per day")
 def update_customer(id):
     customer = db.session.get(Customer, id)
     if not customer:
