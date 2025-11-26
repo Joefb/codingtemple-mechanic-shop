@@ -4,6 +4,7 @@ from .models import db
 from .extensions import ma, limiter, cache
 from .blueprints.customer import customers_bp
 from .blueprints.tech import techs_bp
+from .blueprints.invoice import invoices_bp
 
 
 # Create Flask application instance
@@ -18,5 +19,6 @@ def create_app(config_name):
     cache.init_app(app)
     app.register_blueprint(customers_bp, url_prefix="/customer")
     app.register_blueprint(techs_bp, url_prefix="/tech")
+    app.register_blueprint(invoices_bp, url_prefix="/invoice")
 
     return app
