@@ -4,7 +4,7 @@ from .schemas import customer_schema, customers_schema, login_schema
 from app.blueprints.customer import customers_bp
 from flask import jsonify, request
 from marshmallow import ValidationError
-from app.extensions import limiter, cache
+from app.extensions import limiter
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.util.auth import encode_token, token_required
 
@@ -68,11 +68,12 @@ def get_users():
 
 
 # delete customer by id
-@customers_bp.route("/<int:id>", methods=["DELETE"])
+@customers_bp.route("", methods=["DELETE"])
 @limiter.limit("5 per day")
 @token_required
-def delete_customer(id):
-    customer = db.session.get(Customer, id)
+def delete_customer():
+    customer_id = request.logged_in_customer_id
+    customer = db.session.get(Customer, customer_id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
 
@@ -81,10 +82,13 @@ def delete_customer(id):
     return jsonify({"Success": "Customer deleted"}), 200
 
 
-@customers_bp.route("/<int:id>", methods=["PUT"])
+# update customer by id
+@customers_bp.route("", methods=["PUT"])
 @limiter.limit("10 per day")
-def update_customer(id):
-    customer = db.session.get(Customer, id)
+@token_required
+def update_customer():
+    customer_id = request.logged_in_customer_id
+    customer = db.session.get(Customer, customer_id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
 
@@ -92,6 +96,10 @@ def update_customer(id):
         data = customer_schema.load(request.json, partial=True)
     except ValidationError as err:
         return jsonify(err.messages), 400
+
+    if "password" in data:
+        data["password"] = generate_password_hash(data["password"])
+    # )  # resetting the password key's value, to the hash of the current value
 
     for key, value in data.items():
         setattr(customer, key, value)
