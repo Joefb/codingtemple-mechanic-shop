@@ -1,12 +1,37 @@
 from app.models import db, Tech
-from .schemas import tech_schema, techs_schema
+from .schemas import tech_schema, techs_schema, login_schema
 from app.blueprints.tech import techs_bp
 from flask import jsonify, request
 from marshmallow import ValidationError
-from app.extensions import limiter, cache
+from app.extensions import limiter  # , cache
+from werkzeug.security import check_password_hash, generate_password_hash
+from app.util.auth import encode_token, token_required
 
 
 ## TEC ROUTES ##
+# tech login
+@techs_bp.route("/login", methods=["POST"])
+@limiter.limit("5 per 10 minute")
+def login():
+    try:
+        # get my user credentials - responsibility for my client
+        data = login_schema.load(request.json)  # JSON -> Python
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+
+    tech = db.session.query(Tech).where(Tech.last_name == data["last_name"]).first()
+
+    if tech and check_password_hash(tech.password, data["password"]):
+        # Create token for tech
+        token = encode_token(tech.id)
+        return jsonify(
+            {
+                "message": f"Welcome {tech.first_name}",
+                "token": token,
+            }
+        ), 200
+
+
 # create tech
 @techs_bp.route("", methods=["POST"])
 @limiter.limit("5 per day")
@@ -15,6 +40,10 @@ def create_tech():
         data = tech_schema.load(request.json)
     except ValidationError as err:
         return jsonify(err.messages), 400
+
+    data["password"] = generate_password_hash(
+        data["password"]
+    )  # resetting the password key's value, to the hash of the current value
 
     new_tech = Tech(**data)
     db.session.add(new_tech)
@@ -39,19 +68,27 @@ def get_techs():
 
 
 # delete tech by id
-@techs_bp.route("/<int:id>", methods=["DELETE"])
+@techs_bp.route("", methods=["DELETE"])
 @limiter.limit("5 per day")
-def delete_tech(id):
-    tech = db.session.get(Tech, id)
+@token_required
+def delete_tech():
+    tech_id = request.logged_in_id
+    tech = db.session.get(Tech, tech_id)
     if not tech:
         return jsonify({"Error": "Tech not found"}), 404
 
+    db.session.delete(tech)
+    db.session.commit()
+    return jsonify({"Success": "Tech deleted"}), 200
 
-# TODO: update tech by id
-@techs_bp.route("/<int:id>", methods=["PUT"])
+
+# update tech by id
+@techs_bp.route("", methods=["PUT"])
 @limiter.limit("10 per day")
-def update_tech(id):
-    tech = db.session.get(Tech, id)
+@token_required
+def update_tech():
+    tech_id = request.logged_in_id
+    tech = db.session.get(Tech, tech_id)
     if not tech:
         return jsonify({"Error": "Tech not found"}), 404
 
@@ -59,6 +96,10 @@ def update_tech(id):
         data = tech_schema.load(request.json, partial=True)
     except ValidationError as err:
         return jsonify(err.messages), 400
+
+    if "password" in data:
+        data["password"] = generate_password_hash(data["password"])
+    # )  # resetting the password key's value, to the hash of the current value
 
     for key, value in data.items():
         setattr(tech, key, value)

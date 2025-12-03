@@ -4,12 +4,15 @@ from app.blueprints.invoice import invoices_bp
 from flask import jsonify, request
 from marshmallow import ValidationError
 from app.extensions import limiter, cache
+from werkzeug.security import check_password_hash, generate_password_hash
+from app.util.auth import encode_token, token_required
 
 
 # INVOICE ROUTES
 # create invoice
 @invoices_bp.route("", methods=["POST"])
 @limiter.limit("5 per day")
+@token_required
 def create_invoice():
     try:
         data = invoice_schema.load(request.json)
@@ -42,6 +45,7 @@ def get_invoices():
 # delete invoices by id
 @invoices_bp.route("/<int:id>", methods=["DELETE"])
 @limiter.limit("5 per day")
+@token_required
 def delete_invoice(id):
     invoice = db.session.get(Invoice, id)
     if not invoice:
@@ -52,9 +56,10 @@ def delete_invoice(id):
     return jsonify({"Success": "Invoice Deleted"}), 200
 
 
-# TODO: update invoice by id
+# update invoice by id
 @invoices_bp.route("/<int:id>", methods=["PUT"])
 @limiter.limit("10 per day")
+@token_required
 def update_invoice(id):
     invoice = db.session.get(Invoice, id)
 

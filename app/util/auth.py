@@ -37,7 +37,7 @@ def token_required(f):  # f stands for the function that is getting wrapped
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             print(data)
-            request.logged_in_customer_id = data[
+            request.logged_in_id = data[
                 "sub"
             ]  # Adding the user_id from the token to the request
         except jose.exceptions.ExpiredSignatureError:

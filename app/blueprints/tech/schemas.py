@@ -9,3 +9,4 @@ class TechSchema(ma.SQLAlchemyAutoSchema):
 
 tech_schema = TechSchema()
 techs_schema = TechSchema(many=True)
+login_schema = TechSchema(only=("last_name", "password"))

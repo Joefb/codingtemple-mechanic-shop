@@ -72,7 +72,7 @@ def get_users():
 @limiter.limit("5 per day")
 @token_required
 def delete_customer():
-    customer_id = request.logged_in_customer_id
+    customer_id = request.logged_in_id
     customer = db.session.get(Customer, customer_id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
@@ -87,7 +87,7 @@ def delete_customer():
 @limiter.limit("10 per day")
 @token_required
 def update_customer():
-    customer_id = request.logged_in_customer_id
+    customer_id = request.logged_in_id
     customer = db.session.get(Customer, customer_id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
