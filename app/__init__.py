@@ -25,11 +25,13 @@ def create_app(config_name):
         from app.models import Tech
         from werkzeug.security import generate_password_hash
 
+        # Create a admin user if not exists.
+        # Change password!!!
         if not db.session.query(Tech).filter_by(last_name="admin").first():
             admin_tech = Tech(
                 first_name="admin",
                 last_name="admin",
-                position="Admin",
+                position="admin",
                 phone="000-000-0000",
                 password=generate_password_hash("adminpass"),
             )

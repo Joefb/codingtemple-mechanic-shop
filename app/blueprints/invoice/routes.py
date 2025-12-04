@@ -28,6 +28,7 @@ def create_invoice():
 # get invoice by id
 @invoices_bp.route("/<int:id>", methods=["GET"])
 @limiter.limit("200 per day")
+@token_required
 def get_invoice(id):
     invoice = db.session.get(Invoice, id)
     return jsonify(invoice_schema.dump(invoice)), 200
@@ -37,6 +38,7 @@ def get_invoice(id):
 @invoices_bp.route("", methods=["GET"])
 @limiter.limit("200 per day")
 @cache.cached(timeout=500)
+@token_required
 def get_invoices():
     invoices = db.session.query(Invoice).all()
     return jsonify(invoices_schema.dump(invoices)), 200

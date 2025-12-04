@@ -5,7 +5,12 @@ from flask import jsonify, request
 from marshmallow import ValidationError
 from app.extensions import limiter  # , cache
 from werkzeug.security import check_password_hash, generate_password_hash
-from app.util.auth import encode_token, token_required
+from app.util.auth import (
+    encode_token,
+    admin_or_tech_token_required,
+    admin_token_required,
+    token_required,
+)
 
 
 ## TEC ROUTES ##
@@ -23,7 +28,7 @@ def login():
 
     if tech and check_password_hash(tech.password, data["password"]):
         # Create token for tech
-        token = encode_token(tech.id)
+        token = encode_token(tech.id, tech.position)
         return jsonify(
             {
                 "message": f"Welcome {tech.first_name}",
@@ -35,6 +40,7 @@ def login():
 # create tech
 @techs_bp.route("", methods=["POST"])
 @limiter.limit("5 per day")
+@admin_token_required
 def create_tech():
     try:
         data = tech_schema.load(request.json)
@@ -54,6 +60,7 @@ def create_tech():
 # get tech by id
 @techs_bp.route("/<int:id>", methods=["GET"])
 @limiter.limit("200 per day")
+@admin_or_tech_token_required
 def get_tech(id):
     tech = db.session.get(Tech, id)
     return tech_schema.jsonify(tech), 200
@@ -62,18 +69,18 @@ def get_tech(id):
 # get techs list
 @techs_bp.route("", methods=["GET"])
 @limiter.limit("200 per day")
+@admin_or_tech_token_required
 def get_techs():
     techs = db.session.query(Tech).all()
     return jsonify(techs_schema.dump(techs, many=True)), 200
 
 
 # delete tech by id
-@techs_bp.route("", methods=["DELETE"])
+@techs_bp.route("/<int:id>", methods=["DELETE"])
 @limiter.limit("5 per day")
-@token_required
+@admin_token_required
 def delete_tech():
-    tech_id = request.logged_in_id
-    tech = db.session.get(Tech, tech_id)
+    tech = db.session.get(Tech, id)
     if not tech:
         return jsonify({"Error": "Tech not found"}), 404
 
@@ -85,7 +92,7 @@ def delete_tech():
 # update tech by id
 @techs_bp.route("", methods=["PUT"])
 @limiter.limit("10 per day")
-@token_required
+@admin_or_tech_token_required
 def update_tech():
     tech_id = request.logged_in_id
     tech = db.session.get(Tech, tech_id)

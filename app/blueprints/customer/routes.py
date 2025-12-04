@@ -6,7 +6,7 @@ from flask import jsonify, request
 from marshmallow import ValidationError
 from app.extensions import limiter
 from werkzeug.security import check_password_hash, generate_password_hash
-from app.util.auth import encode_token, token_required
+from app.util.auth import encode_token, token_required, admin_token_required
 
 
 # CUSTOMER ROUTES
@@ -36,6 +36,7 @@ def login():
 # create customer
 @customers_bp.route("", methods=["POST"])
 @limiter.limit("5 per day")
+@admin_token_required
 def create_customer():
     try:
         data = customer_schema.load(request.json)
@@ -54,6 +55,7 @@ def create_customer():
 # get customer by id
 @customers_bp.route("/<int:id>", methods=["GET"])
 @limiter.limit("200 per day")
+@token_required
 def get_customer(id):
     customer = db.session.get(Customer, id)
     return customer_schema.jsonify(customer), 200
@@ -62,18 +64,19 @@ def get_customer(id):
 # get customers list
 @customers_bp.route("", methods=["GET"])
 @limiter.limit("200 per day")
+@token_required
 def get_users():
     customers = db.session.query(Customer).all()
     return customers_schema.jsonify(customers), 200
 
 
 # delete customer by id
-@customers_bp.route("", methods=["DELETE"])
+@customers_bp.route("/<int:id>", methods=["DELETE"])
 @limiter.limit("5 per day")
-@token_required
+@admin_token_required
 def delete_customer():
-    customer_id = request.logged_in_id
-    customer = db.session.get(Customer, customer_id)
+    # customer_id = request.logged_in_id
+    customer = db.session.get(Customer, id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
 
