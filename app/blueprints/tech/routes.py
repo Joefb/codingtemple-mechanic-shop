@@ -60,13 +60,26 @@ def create_tech():
 @techs_bp.route("/<int:id>", methods=["GET"])
 @limiter.limit("200 per day")
 @admin_or_tech_token_required
-def get_tech(id):
+def get_tech_by_id(id):
     tech = db.session.get(Tech, id)
+    if not tech:
+        return jsonify({"Error": "Tech not found"}), 404
+
+    return tech_schema.jsonify(tech), 200
+
+
+# get logged in tech
+@techs_bp.route("", methods=["GET"])
+@limiter.limit("200 per day")
+@admin_or_tech_token_required
+def get_tech():
+    tech_id = request.logged_in_id
+    tech = db.session.get(Tech, tech_id)
     return tech_schema.jsonify(tech), 200
 
 
 # get techs list
-@techs_bp.route("", methods=["GET"])
+@techs_bp.route("/list", methods=["GET"])
 @limiter.limit("200 per day")
 @admin_or_tech_token_required
 def get_techs():

@@ -11,7 +11,12 @@ from flask import jsonify, request
 from marshmallow import ValidationError
 from app.extensions import limiter
 from werkzeug.security import check_password_hash, generate_password_hash
-from app.util.auth import encode_token, token_required, admin_token_required
+from app.util.auth import (
+    admin_or_tech_token_required,
+    encode_token,
+    token_required,
+    admin_token_required,
+)
 
 
 # CUSTOMER ROUTES
@@ -57,22 +62,35 @@ def create_customer():
     return create_customer_schema.jsonify(new_customer), 201
 
 
-# get customer by id
-@customers_bp.route("/<int:id>", methods=["GET"])
+# get current logged in customer
+@customers_bp.route("", methods=["GET"])
 @limiter.limit("200 per day")
 @token_required
-def get_customer(id):
-    customer = db.session.get(Customer, id)
+def get_customer():
+    customer_id = request.logged_in_id
+    customer = db.session.get(Customer, customer_id)
     return customer_schema.jsonify(customer), 200
 
 
 # get customers list
-@customers_bp.route("", methods=["GET"])
+@customers_bp.route("/list", methods=["GET"])
 @limiter.limit("200 per day")
-@token_required
-def get_users():
+@admin_or_tech_token_required
+def get_customers():
     customers = db.session.query(Customer).all()
     return customers_schema.jsonify(customers), 200
+
+
+# get customer by id. Admin and tech use only
+@customers_bp.route("/<int:id>", methods=["GET"])
+@limiter.limit("200 per day")
+@admin_or_tech_token_required
+def get_customer_by_id(id):
+    customer = db.session.get(Customer, id)
+    if not customer:
+        return jsonify({"Error": "Customer not found"}), 404
+
+    return customer_schema.jsonify(customer), 200
 
 
 # delete customer by id
@@ -80,7 +98,6 @@ def get_users():
 @limiter.limit("5 per day")
 @admin_token_required
 def delete_customer(id):
-    # customer_id = request.logged_in_id
     customer = db.session.get(Customer, id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
@@ -90,7 +107,7 @@ def delete_customer(id):
     return jsonify({"Success": "Customer deleted"}), 200
 
 
-# update customer by id
+# update customer
 @customers_bp.route("", methods=["PUT"])
 @limiter.limit("10 per day")
 @token_required
