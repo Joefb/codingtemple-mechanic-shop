@@ -21,4 +21,19 @@ def create_app(config_name):
     app.register_blueprint(techs_bp, url_prefix="/tech")
     app.register_blueprint(invoices_bp, url_prefix="/invoice")
 
+    with app.app_context():
+        from app.models import Tech
+        from werkzeug.security import generate_password_hash
+
+        if not db.session.query(Tech).filter_by(last_name="admin").first():
+            admin_tech = Tech(
+                first_name="admin",
+                last_name="admin",
+                position="Admin",
+                phone="000-000-0000",
+                password=generate_password_hash("adminpass"),
+            )
+            db.session.add(admin_tech)
+            db.session.commit()
+
     return app
