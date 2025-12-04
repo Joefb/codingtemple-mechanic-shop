@@ -7,6 +7,13 @@ class TechSchema(ma.SQLAlchemyAutoSchema):
         model = Tech
 
 
-tech_schema = TechSchema()
-techs_schema = TechSchema(many=True)
+class PublicTechSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Tech
+        exclude = ("password",)
+
+
+tech_schema = PublicTechSchema()
+create_tech_schema = TechSchema()
+techs_schema = PublicTechSchema(many=True)
 login_schema = TechSchema(only=("last_name", "password"))

@@ -100,6 +100,7 @@ def admin_or_tech_token_required(
                 return jsonify({"message": "admin or tech access required"}), 403
             print(data)
             request.logged_in_id = data["sub"]
+            request.logged_in_position = data["position"]
         except jose.exceptions.ExpiredSignatureError:
             return jsonify({"message": "token is expired"}), 403
         except jose.exceptions.JWTError:

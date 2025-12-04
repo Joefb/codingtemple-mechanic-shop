@@ -33,7 +33,7 @@ def create_app(config_name):
                 last_name="admin",
                 position="admin",
                 phone="000-000-0000",
-                password=generate_password_hash("adminpass"),
+                password=generate_password_hash("password"),
             )
             db.session.add(admin_tech)
             db.session.commit()

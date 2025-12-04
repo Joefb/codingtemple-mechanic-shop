@@ -1,6 +1,11 @@
 # Imports
 from app.models import db, Customer
-from .schemas import customer_schema, customers_schema, login_schema
+from .schemas import (
+    customer_schema,
+    customers_schema,
+    create_customer_schema,
+    login_schema,
+)
 from app.blueprints.customer import customers_bp
 from flask import jsonify, request
 from marshmallow import ValidationError
@@ -39,7 +44,7 @@ def login():
 @admin_token_required
 def create_customer():
     try:
-        data = customer_schema.load(request.json)
+        data = create_customer_schema.load(request.json)
     except ValidationError as err:
         return jsonify(err.messages), 400
 
@@ -49,7 +54,7 @@ def create_customer():
     new_customer = Customer(**data)
     db.session.add(new_customer)
     db.session.commit()
-    return customer_schema.jsonify(new_customer), 201
+    return create_customer_schema.jsonify(new_customer), 201
 
 
 # get customer by id
@@ -74,7 +79,7 @@ def get_users():
 @customers_bp.route("/<int:id>", methods=["DELETE"])
 @limiter.limit("5 per day")
 @admin_token_required
-def delete_customer():
+def delete_customer(id):
     # customer_id = request.logged_in_id
     customer = db.session.get(Customer, id)
     if not customer:
@@ -92,6 +97,31 @@ def delete_customer():
 def update_customer():
     customer_id = request.logged_in_id
     customer = db.session.get(Customer, customer_id)
+    if not customer:
+        return jsonify({"Error": "Customer not found"}), 404
+
+    try:
+        data = customer_schema.load(request.json, partial=True)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    if "password" in data:
+        data["password"] = generate_password_hash(data["password"])
+    # )  # resetting the password key's value, to the hash of the current value
+
+    for key, value in data.items():
+        setattr(customer, key, value)
+
+    db.session.commit()
+    return customer_schema.jsonify(customer), 200
+
+
+# update customer by id. Admin use only
+@customers_bp.route("/<int:id>", methods=["PUT"])
+@limiter.limit("10 per day")
+@admin_token_required
+def update_customer_by_id(id):
+    customer = db.session.get(Customer, id)
     if not customer:
         return jsonify({"Error": "Customer not found"}), 404
 
