@@ -17,6 +17,8 @@ produces:
 # Info about the API routes
 paths:
 
+  ### CUSTOMER PATHS ###
+  # Customer login
   /customer/login:
     post:
       tags:
@@ -42,11 +44,12 @@ paths:
               message: "Welcome customer"
               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
+  # Create customer account
   /customer:
     post:
       tags:
         - Customer
-      summary: "Create customer endpoint. Admin token required"
+      summary: "Create customer endpoint. Admin token required."
       description: "Creates customer account. Admin must create customer accounts."
 
       parameters:
@@ -71,9 +74,37 @@ paths:
               address: "111 super duper way LA CA, 12345"
               password: "<encrypted password>"
 
+  # Get customers list
+  /customer/list:
+    get:
+      tags:
+        - Customer
+
+      summary: "Get customers list endpoint. Admin or Tech token required."
+      description: "Gets a list of all customers. Admin or Tech token required"
+
+      responses:
+        200:
+          description: "Customers List Successful"
+          schema:
+            $ref: "#/definitions/CustomerResponse"
 
 # Create definitions
 definitions:
+  CustomerResponse:
+    type: object
+
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      email:
+        type: string
+      phone:
+        type: string
+      address:
+        type: string
 
   CustomerLoginCredentials:
     type: object
