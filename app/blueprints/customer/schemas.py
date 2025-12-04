@@ -1,4 +1,4 @@
-# Impopts
+# Imports
 from app.extensions import ma
 from app.models import Customer
 

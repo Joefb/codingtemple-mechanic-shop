@@ -17,6 +17,7 @@ def create_app(config_name):
     ma.init_app(app)  # This adds Marshmallow to the app.
     limiter.init_app(app)
     cache.init_app(app)
+    # Create prefixed blueprint routes
     app.register_blueprint(customers_bp, url_prefix="/customer")
     app.register_blueprint(techs_bp, url_prefix="/tech")
     app.register_blueprint(invoices_bp, url_prefix="/invoice")
