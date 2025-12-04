@@ -2,8 +2,8 @@
 
 swagger: '2.0'
 info:
-  title: "Your API"
-  description: "This is an API"
+  title: "Cars R Us API"
+  description: "Used to manage the automative repair shop"
   version: "1.0.0"
 host: "127.0.0.1:5000"
 schemes:
@@ -12,5 +12,119 @@ consumes:
   - "application/json"
 produces:
   - "application/json"
-paths: 
-definitions: 
+
+# Create paths
+# Info about the API routes
+paths:
+
+  /customer/login:
+    post:
+      tags:
+        - Customer
+      summary: "Login endpoint. Generates a token"
+      description: "Customer credential validation using email and password. Upon validation a token is given"
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Login Credentials"
+          required: true
+          schema:
+            $ref: "#/definitions/CustomerLoginCredentials"
+
+      responses:
+        200:
+          description: "Login Successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+          examples:
+            application/json:
+              message: "Welcome customer"
+              token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+  /customer:
+    post:
+      tags:
+        - Customer
+      summary: "Create customer endpoint. Admin token required"
+      description: "Creates customer account. Admin must create customer accounts."
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Info"
+          required: true
+          schema:
+            $ref: "#/definitions/CustomerInput"
+
+      responses:
+        201:
+          description: "Customer Creation Successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+              password: "<encrypted password>"
+
+
+# Create definitions
+definitions:
+
+  CustomerLoginCredentials:
+    type: object
+
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+
+    required:
+      - email
+      - password
+
+  LoginResponse:
+    type: object
+
+    properties:
+      message:
+        type: string
+      token:
+        type: string
+
+  CustomerInput:
+    type: object
+
+    properties:
+      first_name:
+        type: string
+        example: "Bob"
+      last_name:
+        type: string
+        example: "Barker"
+      email:
+        type: string
+        example: "bob@bob.com"
+      phone:
+        type: string
+        example: "555-123-4567"
+      address:
+        type: string
+        example: "123 your mom way, Haha CA 12345"
+      password:
+        type: string
+        example: "bobisthebomb"
+
+    required:
+      - first_name
+      - last_name
+      - email
+      - phone
+      - address
+      - password
+
