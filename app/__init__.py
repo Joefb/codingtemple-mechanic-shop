@@ -17,8 +17,26 @@ def create_app(config_name):
     ma.init_app(app)  # This adds Marshmallow to the app.
     limiter.init_app(app)
     cache.init_app(app)
+    # Create prefixed blueprint routes
     app.register_blueprint(customers_bp, url_prefix="/customer")
     app.register_blueprint(techs_bp, url_prefix="/tech")
     app.register_blueprint(invoices_bp, url_prefix="/invoice")
+
+    with app.app_context():
+        from app.models import Tech
+        from werkzeug.security import generate_password_hash
+
+        # Create a admin user if not exists.
+        # Change password!!!
+        if not db.session.query(Tech).filter_by(last_name="admin").first():
+            admin_tech = Tech(
+                first_name="admin",
+                last_name="admin",
+                position="admin",
+                phone="000-000-0000",
+                password=generate_password_hash("password"),
+            )
+            db.session.add(admin_tech)
+            db.session.commit()
 
     return app
