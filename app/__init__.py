@@ -1,10 +1,19 @@
 # Imports
 from flask import Flask
+from flask_swagger_ui import get_swaggerui_blueprint
 from .models import db
 from .extensions import ma, limiter, cache
 from .blueprints.customer import customers_bp
 from .blueprints.tech import techs_bp
 from .blueprints.invoice import invoices_bp
+
+SWAGGER_URL = "/api/docs"  # URL for exposing my swagger ui
+API_URL = "/static/swagger.yaml"
+
+# creating swagger blueprint
+swagger_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL, API_URL, config={"app_name": "Autos R Us API"}
+)
 
 
 # Create Flask application instance
@@ -21,6 +30,7 @@ def create_app(config_name):
     app.register_blueprint(customers_bp, url_prefix="/customer")
     app.register_blueprint(techs_bp, url_prefix="/tech")
     app.register_blueprint(invoices_bp, url_prefix="/invoice")
+    app.register_blueprint(swagger_blueprint, url_prefix=SWAGGER_URL)
 
     with app.app_context():
         from app.models import Tech

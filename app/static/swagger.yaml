@@ -1,0 +1,777 @@
+#app/static/swagger.yaml
+
+swagger: '2.0'
+info:
+  title: "Cars R Us API"
+  description: "Used to manage the automative repair shop"
+  version: "1.0.0"
+host: "127.0.0.1:5000"
+schemes:
+  - "http"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+
+# Create paths
+# Info about the API routes
+paths:
+
+  ### CUSTOMER PATHS ###
+  # Customer login
+  /customer/login:
+    post:
+      tags:
+        - Customer
+      summary: "Login endpoint. Generates a token."
+      description: "Customer credential validation using email and password. Upon validation a token is given."
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Login Credentials"
+          required: true
+          schema:
+            $ref: "#/definitions/CustomerLoginCredentials"
+
+      responses:
+        200:
+          description: "Login Successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+          examples:
+            application/json:
+              message: "Welcome customer."
+              token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        401:
+          description: "Login Failed"
+          examples:
+            application/json:
+            message: "Invalid email or password."
+
+  # Customer route 
+  /customer:
+
+    get:
+      tags:
+        - Customer
+      summary: "Get the current logged in customer endpoint."
+      description: "Gets the current logged in customer data. Token required. "
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: "Get Current Customer Data Successful"
+          schema:
+            $ref: "#/definitions/CustomerResponse"
+
+    post:
+      tags:
+        - Customer
+      summary: "Create customer endpoint. Admin token required."
+      description: "Creates customer account. Admin must create customer accounts."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Info"
+          required: true
+          schema:
+            $ref: "#/definitions/CustomerInput"
+
+      responses:
+        201:
+          description: "Customer Creation Successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+              password: "<encrypted password>"
+
+    put:
+      tags:
+        - Customer
+      summary: "Update customer endpoint"
+      description: "Updates the current loggin in customer"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Updates"
+          required: true
+          schema:
+            $ref: "#definitions/CustomerInput"
+
+      responses:
+        200:
+          description: "Update Successful."
+          schema: "#definitions/CustomerResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+              password: "<encrypted password>"
+        404:
+          description: "Customer not found."
+          examples:
+            application/json:
+              message: "Customer not found"
+
+  # Get customers list
+  /customer/list:
+    get:
+      tags:
+        - Customer
+
+      summary: "Get customers list endpoint. Admin or Tech token required."
+      description: "Gets a list of all customers. Admin or Tech token required"
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: "Customers List Successful"
+          schema:
+            $ref: "#/definitions/CustomerResponse"
+
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+
+  # Get/delete/update customer by id
+  /customer/{id}:
+    get:
+      tags:
+       - Customer
+      summary: "Get customer data by id."
+      description: "Gets a customer by id. Admin or Tech token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Customer found"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+
+        404:
+          description: "Customer not found."
+          examples:
+            application/json:
+              message: "Customer not found"
+
+    delete:
+      tags:
+       - Customer
+      summary: "Delete customer by id."
+      description: "Deletes a customer by id. Admin token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Customer found"
+          examples:
+            application/json:
+              message: "Customer deleted."
+        404:
+          description: "Customer not found"
+          examples:
+            application/json:
+              message: "Customer not found."
+
+    put:
+      tags:
+        - Customer
+      summary: "Update customer by id endpoint"
+      description: "Updates the customer by id. Admin token required."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Updates"
+          required: true
+          schema:
+            $ref: "#definitions/CustomerInput"
+
+      responses:
+        200:
+          description: "Update Successful."
+          schema: "#definitions/CustomerResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+              password: "<encrypted password>"
+        404:
+          description: "Customer not found."
+          examples:
+            application/json:
+              message: "Customer not found"
+
+  ## TECH PATHS ##
+  /tech/login:
+    post:
+      tags:
+        - Tech
+      summary: "Login endpoint. Generates a token."
+      description: "Tech credential validation using email and password. Upon validation a token is given."
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Tech Login Credentials"
+          required: true
+          schema:
+            $ref: "#/definitions/TechLoginCredentials"
+
+      responses:
+        200:
+          description: "Login Successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+          examples:
+            application/json:
+              message: "Welcome tech."
+              token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        401:
+          description: "Login Failed"
+          examples:
+            application/json:
+            message: "Invalid email or password."
+
+  # tech route 
+  /tech:
+    get:
+      tags:
+        - Tech
+      summary: "Get the current logged in tech endpoint."
+      description: "Gets the current logged in tech data. Token required. "
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: "Get Current Tech Data Successful"
+          schema:
+            $ref: "#/definitions/TechResponse"
+
+    post:
+      tags:
+        - Tech
+      summary: "Create tech endpoint. Admin token required."
+      description: "Creates tech account. Admin must create tech accounts."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "tech Info"
+          required: true
+          schema:
+            $ref: "#/definitions/TechInput"
+
+      responses:
+        201:
+          description: "Tech Creation Successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              position: "Manager"
+              phone: "555-123-4567"
+              password: "<encrypted password>"
+
+    put:
+      tags:
+        - Tech
+      summary: "Update tech endpoint"
+      description: "Updates the current logged in in tech"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "tech Updates"
+          required: true
+          schema:
+            $ref: "#definitions/TechInput"
+
+      responses:
+        200:
+          description: "Update Successful."
+          schema: "#definitions/TechResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              position: "manager"
+              phone: "555-123-4567"
+              password: "<encrypted password>"
+        404:
+          description: "tech not found."
+          examples:
+            application/json:
+              message: "tech not found"
+
+  # Get techs list
+  /tech/list:
+    get:
+      tags:
+        - Tech
+
+      summary: "Get techs list endpoint. Admin or Tech token required."
+      description: "Gets a list of all techs. Admin or Tech token required"
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: "Techs List Successful"
+          schema:
+            $ref: "#/definitions/TechResponse"
+
+  # Get/delete/update tech by id
+  /tech/{id}:
+    get:
+      tags:
+       - Tech
+      summary: "Get tech data by id."
+      description: "Gets a tech by id. Admin or Tech token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "tech found"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              position: "manager"
+              phone: "555-123-4567"
+
+        404:
+          description: "tech not found"
+          examples:
+            application/json:
+              message: "Tech not found."
+
+    delete:
+      tags:
+       - Tech
+      summary: "Delete tech by id."
+      description: "Deletes a tech by id. Admin token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "tech deleted"
+          examples:
+            message: "tech deleted."
+        404:
+          description: "tech not found"
+          examples:
+            message: "tech not found."
+
+    put:
+      tags:
+        - Tech
+      summary: "Update tech by id endpoint"
+      description: "Updates the tech by id. Admin token required."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "tech Updates"
+          required: true
+          schema:
+            $ref: "#definitions/TechInput"
+
+      responses:
+        200:
+          description: "Update Successful."
+          schema: "#definitions/TechResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              position: "manager"
+              phone: "555-123-4567"
+              password: "<encrypted password>"
+        404:
+          description: "tech not found."
+          examples:
+            application/json:
+              message: "tech not found"
+
+  ## INVOICE PATHS ##
+  /invoice:
+    get:
+      tags:
+        - Invoice
+      summary: "Get invoice list endpoint."
+      description: "Gets a list of invoices. Admin/Tech token required. "
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: "Get Invoices Data Successful"
+          schema:
+            $ref: "#/definitions/InvoiceResponse"
+
+    post:
+      tags:
+        - Invoice
+      summary: "Create invoice endpoint. Admin/Tech token required."
+      description: "Creates invoice. Admin must create invoices."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Invoice Info"
+          required: true
+          schema:
+            $ref: "#/definitions/InvoiceInput"
+
+      responses:
+        201:
+          description: "Invoice Creation Successful"
+          schema:
+            $ref: "#/definitions/InvoiceResponse"
+          examples:
+            application/json:
+              id: "3"
+              date: "2025-12-24"
+              status: "Brake job: In progress."
+              total_cost: "200.99"
+              vehicle: "1999 Ford Exploder"
+              customer_id: "12"
+
+  # Get/delete/update invoice by id
+  /invoice/{id}:
+    get:
+      tags:
+       - Invoice
+      summary: "Get invoice data by id."
+      description: "Gets a invoice by id. Admin or Tech token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Invoice found"
+          schema:
+            $ref: "#/definitions/InvoiceResponse"
+          examples:
+            application/json:
+              id: "3"
+              date: "2025-12-24"
+              status: "Brake job: In progress."
+              total_cost: "200.99"
+              vehicle: "1999 Ford Exploder"
+              customer_id: "12"
+        404:
+          description: "Invoice not found"
+
+    delete:
+      tags:
+       - Invoice
+      summary: "Delete invoice by id."
+      description: "Deletes a invoice by id. Admin token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "invoice found"
+          examples:
+            application/json:
+              message: "Invoice deleted."
+        404:
+          description: "invoice not found"
+          examples:
+            application/json:
+              message: "Invoice not found."
+
+    put:
+      tags:
+        - Invoice
+      summary: "Update invoice by id endpoint"
+      description: "Updates the invoice by id. Admin token required."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "invoice Updates"
+          required: true
+          schema:
+            $ref: "#definitions/InvoiceInput"
+
+      responses:
+        200:
+          description: "Invoice Creation Successful"
+          schema:
+            $ref: "#/definitions/InvoiceResponse"
+          examples:
+            application/json:
+              id: "3"
+              date: "2025-12-24"
+              status: "Brake job: In progress."
+              total_cost: "200.99"
+              vehicle: "1999 Ford Exploder"
+              customer_id: "12"
+        404:
+          description: "invoice not found."
+          examples:
+            application/json:
+              message: "invoice not found"
+
+# Create definitions
+definitions:
+
+  ## INVOICE DEFINITIONS ##
+  InvoiceResponse:
+    type: object
+    properties:
+      id:
+        type: integer
+      date:
+        type: date
+      status:
+        type: string
+      total_cost:
+        type: string
+      vehicle:
+        type: string
+      customer_id:
+        type: integer
+
+  InvoiceInput:
+    type: object
+
+    properties:
+      date:
+        type: date
+        example: "2025-12-24"
+      status:
+        type: string
+        example: "Brake Job: In progress."
+      total_cost:
+        type: float
+        example: "200.50"
+      vehicle:
+        type: string
+        example: "2020 ford exploder"
+      customer_id:
+        type: integer 
+        example: "1"
+
+    required:
+      - first_name
+      - last_name
+      - position
+      - phone
+      - password
+
+
+  ## TECH DEFINITIONS ##
+
+  TechResponse:
+    type: object
+
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      position:
+        type: string
+      phone:
+        type: string
+
+  TechLoginCredentials:
+    type: object
+
+    properties:
+      last_name:
+        type: string
+      password:
+        type: string
+
+    required:
+      - last_name
+      - password
+
+  TechInput:
+    type: object
+
+    properties:
+      first_name:
+        type: string
+        example: "Bob"
+      last_name:
+        type: string
+        example: "Barker"
+      position:
+        type: string
+        example: "manager"
+      phone:
+        type: string
+        example: "555-123-4567"
+      password:
+        type: string
+        example: "password123"
+
+    required:
+      - first_name
+      - last_name
+      - position
+      - phone
+      - password
+
+  ## CUSTOMER DEFINITIONS ##
+  CustomerResponse:
+    type: object
+
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      email:
+        type: string
+      phone:
+        type: string
+      address:
+        type: string
+
+  CustomerLoginCredentials:
+    type: object
+
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+
+    required:
+      - email
+      - password
+
+  LoginResponse:
+    type: object
+
+    properties:
+      message:
+        type: string
+      token:
+        type: string
+
+  CustomerInput:
+    type: object
+
+    properties:
+      first_name:
+        type: string
+        example: "Bob"
+      last_name:
+        type: string
+        example: "Barker"
+      email:
+        type: string
+        example: "bob@bob.com"
+      phone:
+        type: string
+        example: "555-123-4567"
+      address:
+        type: string
+        example: "123 your mom way, Haha CA 12345"
+      password:
+        type: string
+        example: "bobisthebomb"
+
+    required:
+      - first_name
+      - last_name
+      - email
+      - phone
+      - address
+      - password
+
