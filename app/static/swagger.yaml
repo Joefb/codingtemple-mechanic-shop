@@ -23,8 +23,8 @@ paths:
     post:
       tags:
         - Customer
-      summary: "Login endpoint. Generates a token"
-      description: "Customer credential validation using email and password. Upon validation a token is given"
+      summary: "Login endpoint. Generates a token."
+      description: "Customer credential validation using email and password. Upon validation a token is given."
 
       parameters:
         - in: "body"
@@ -41,13 +41,13 @@ paths:
             $ref: "#/definitions/LoginResponse"
           examples:
             application/json:
-              message: "Welcome customer"
+              message: "Welcome customer."
               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         401:
           description: "Login Failed"
           examples:
             application/json:
-            message: "Invalid email or password"
+            message: "Invalid email or password."
 
   # Customer route 
   /customer:
@@ -55,12 +55,14 @@ paths:
     get:
       tags:
         - Customer
-      summary: "Get the current logged in customer endponit"
-      description: "Gets the current logged in customer data "
+      summary: "Get the current logged in customer endpoint."
+      description: "Gets the current logged in customer data. Token required. "
+      security:
+        - bearerAuth: []
 
       responses:
         200:
-          description: "Current Customer Data Successful"
+          description: "Get Current Customer Data Successful"
           schema:
             $ref: "#/definitions/CustomerResponse"
 
@@ -69,6 +71,8 @@ paths:
         - Customer
       summary: "Create customer endpoint. Admin token required."
       description: "Creates customer account. Admin must create customer accounts."
+      security:
+        - bearerAuth: []
 
       parameters:
         - in: "body"
@@ -92,6 +96,38 @@ paths:
               address: "111 super duper way LA CA, 12345"
               password: "<encrypted password>"
 
+    put:
+      tags:
+        - Customer
+      summary: "Update customer endpoint"
+      description: "Updates the current loggin in customer"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Updates"
+          required: true
+          schema:
+            $ref: "#definitions/CustomerInput"
+
+      responses:
+        200:
+          description: "Update Successful."
+          schema: "#definitions/CustomerResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+              password: "<encrypted password>"
+        404:
+          description: "Customer not found."
+          examples:
+            application/json:
+              message: "Customer not found"
 
   # Get customers list
   /customer/list:
@@ -101,6 +137,8 @@ paths:
 
       summary: "Get customers list endpoint. Admin or Tech token required."
       description: "Gets a list of all customers. Admin or Tech token required"
+      security:
+        - bearerAuth: []
 
       responses:
         200:
@@ -108,13 +146,15 @@ paths:
           schema:
             $ref: "#/definitions/CustomerResponse"
 
-  # Get customer by id
+  # Get/delete/update customer by id
   /customer/{id}:
     get:
       tags:
        - Customer
       summary: "Get customer data by id."
       description: "Gets a customer by id. Admin or Tech token required."
+      security:
+        - bearerAuth: []
 
       parameters:
         - name: "id"
@@ -128,6 +168,61 @@ paths:
           description: "Customer found"
         404:
           description: "Customer not found"
+
+    delete:
+      tags:
+       - Customer
+      summary: "Delete customer by id."
+      description: "Deletes a customer by id. Admin token required."
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Customer found"
+        404:
+          description: "Customer not found"
+
+    put:
+      tags:
+        - Customer
+      summary: "Update customer by id endpoint"
+      description: "Updates the customer by id. Admin token required."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer Updates"
+          required: true
+          schema:
+            $ref: "#definitions/CustomerInput"
+
+      responses:
+        200:
+          description: "Update Successful."
+          schema: "#definitions/CustomerResponse"
+          examples:
+            application/json:
+              first_name: "Bob"
+              last_name: "Barker"
+              email: "bob@bob.com"
+              phone: "555-123-4567"
+              address: "111 super duper way LA CA, 12345"
+              password: "<encrypted password>"
+        404:
+          description: "Customer not found."
+          examples:
+            application/json:
+              message: "Customer not found"
+      
 
 # Create definitions
 definitions:
