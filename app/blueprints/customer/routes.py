@@ -41,6 +41,8 @@ def login():
                 "token": token,
             }
         ), 200
+    else:
+        return jsonify({"error": "Invalid email or password"}), 401
 
 
 # create customer

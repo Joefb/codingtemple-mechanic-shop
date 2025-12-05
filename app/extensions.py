@@ -6,5 +6,5 @@ from flask_caching import Cache
 
 # Create Marshmallow instance
 ma = Marshmallow()
-limiter = Limiter(get_remote_address, default_limits=["200 per day", "50 per hour"])
+limiter = Limiter(get_remote_address, default_limits=["2000 per day", "500 per hour"])
 cache = Cache()

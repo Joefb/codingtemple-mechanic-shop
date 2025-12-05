@@ -43,9 +43,27 @@ paths:
             application/json:
               message: "Welcome customer"
               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        401:
+          description: "Login Failed"
+          examples:
+            application/json:
+            message: "Invalid email or password"
 
-  # Create customer account
+  # Customer route 
   /customer:
+
+    get:
+      tags:
+        - Customer
+      summary: "Get the current logged in customer endponit"
+      description: "Gets the current logged in customer data "
+
+      responses:
+        200:
+          description: "Current Customer Data Successful"
+          schema:
+            $ref: "#/definitions/CustomerResponse"
+
     post:
       tags:
         - Customer
@@ -74,6 +92,7 @@ paths:
               address: "111 super duper way LA CA, 12345"
               password: "<encrypted password>"
 
+
   # Get customers list
   /customer/list:
     get:
@@ -89,8 +108,31 @@ paths:
           schema:
             $ref: "#/definitions/CustomerResponse"
 
+  # Get customer by id
+  /customer/{id}:
+    get:
+      tags:
+       - Customer
+      summary: "Get customer data by id."
+      description: "Gets a customer by id. Admin or Tech token required."
+
+      parameters:
+        - name: "id"
+          in: "path"
+          required: "true"
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Customer found"
+        404:
+          description: "Customer not found"
+
 # Create definitions
 definitions:
+
+  ## CUSTOMER DEFINITIONS
   CustomerResponse:
     type: object
 

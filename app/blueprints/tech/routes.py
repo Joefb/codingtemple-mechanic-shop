@@ -34,6 +34,8 @@ def login():
                 "token": token,
             }
         ), 200
+    else:
+        return jsonify({"error": "Invalid last name or password"}), 401
 
 
 # create tech
