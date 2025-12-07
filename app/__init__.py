@@ -32,24 +32,22 @@ def create_app(config_name):
     app.register_blueprint(invoices_bp, url_prefix="/invoice")
     app.register_blueprint(swagger_blueprint, url_prefix=SWAGGER_URL)
 
-    # I think this is why my tests were failing initially.
     # This creates the admin user if it does not exist.
     # Needed to create customers and do other admin stuff
-    # with app.app_context():
-    #     from app.models import Tech
-    #     from werkzeug.security import generate_password_hash
-    #
-    #     # Create a admin user if not exists.
-    #     # Change password!!!
-    #     if not db.session.query(Tech).filter_by(last_name="admin").first():
-    #         admin_tech = Tech(
-    #             first_name="admin",
-    #             last_name="admin",
-    #             position="admin",
-    #             phone="000-000-0000",
-    #             password=generate_password_hash("password"),
-    #         )
-    #         db.session.add(admin_tech)
-    #         db.session.commit()
+    with app.app_context():
+        from app.models import Tech
+        from werkzeug.security import generate_password_hash
+
+        # This is a hard coded password! Change the admin password after first run!
+        if not db.session.query(Tech).filter_by(last_name="admin").first():
+            admin_tech = Tech(
+                first_name="admin",
+                last_name="admin",
+                position="admin",
+                phone="000-000-0000",
+                password=generate_password_hash("password"),
+            )
+            db.session.add(admin_tech)
+            db.session.commit()
 
     return app

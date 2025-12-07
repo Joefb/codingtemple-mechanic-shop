@@ -79,13 +79,11 @@ def admin_token_required(f):  # f stands for the function that is getting wrappe
     return decoration
 
 
-def admin_or_tech_token_required(
-    f,
-):  # f stands for the function that is getting wrapped
+# f stands for the function that is getting wrapped
+def admin_or_tech_token_required(f):
     @wraps(f)
-    def decoration(
-        *args, **kwargs
-    ):  # The function that runs before the functiuon that we're wrapping
+    def decoration(*args, **kwargs):
+        # This function that runs before the functiuon that we're wrapping
         token = None
 
         if "Authorization" in request.headers:

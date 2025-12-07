@@ -17,6 +17,15 @@ class TestCustomer(unittest.TestCase):
             address="123 Test St",
         )
 
+        self.customer_payload = {
+            "first_name": "TestBob",
+            "last_name": "TestBarker",
+            "email": "bob@bob.com",
+            "password": "bob",
+            "phone": "555-555-5555",
+            "address": "555 Bob St",
+        }
+
         with self.app.app_context():
             db.drop_all()
             db.create_all()
@@ -26,20 +35,57 @@ class TestCustomer(unittest.TestCase):
         self.token = encode_token(1, "admin")
         self.client = self.app.test_client()
 
+    # def tearDown(self):
+    #     with self.app.app_context():
+    #         db.session.remove()
+    #         db.drop_all()
+    #         db.engine.dispose()
+    # db.session.close()
+
     # create customer test
     def test_create_customer(self):
-        customer_payload = {
-            "first_name": "TestBob",
-            "last_name": "TestBarker",
-            "email": "bob@bob.com",
-            "password": "bob",
-            "phone": "555-555-5555",
-            "address": "555 Bob St",
-        }
+        response = self.client.post(
+            "/customer",
+            json=self.customer_payload,
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json["first_name"], "TestBob")
+        self.assertEqual(response.json["last_name"], "TestBarker")
+        self.assertIn("id", response.json)
+
+    def test_create_customer_no_token(self):
+        response = self.client.post(
+            "/customer",
+            json=self.customer_payload,
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            response.json["error"], "token missing from authorization headers"
+        )
+        self.assertNotIn("id", response.json)
+
+    def test_create_customer_invalid_token(self):
+        customer_token = encode_token(1, "user")
 
         response = self.client.post(
             "/customer",
-            json=customer_payload,
-            headers={"Authorization": f"Bearer {self.token}"},
+            json=self.customer_payload,
+            headers={"Authorization": f"Bearer {customer_token}"},
         )
-        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json["message"], "admin access required")
+        self.assertNotIn("id", response.json)
+        self.assertNotIn("first_name", response.json)
+
+    def test_customer_login(self):
+        payload = {"email": "test@test.com", "password": "password"}
+        response = self.client.post("/customer/login", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("token", response.json)
+        self.assertEqual(response.json["message"], "Welcome Firstname")
+        self.assertIsInstance(response.json["token"], str)

@@ -23,7 +23,7 @@ from app.util.auth import (
 # customer login
 @customers_bp.route("/login", methods=["POST"])
 @limiter.limit("5 per 10 minute")
-def login():
+def customer_login():
     try:
         # get my user credentials - responsibility for my client
         data = login_schema.load(request.json)  # JSON -> Python
