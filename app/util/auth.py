@@ -29,7 +29,6 @@ def token_required(f):  # f stands for the function that is getting wrapped
         token = None
 
         if "Authorization" in request.headers:
-            # Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjM1MTgwMTQsImlhdCI6MTc2MzUxNDQxNCwic3ViIjoiMSIsInJvbGUiOiJBZG1pbiJ9.2gEKkaU_LEQAxEPbj5734khp4k6jKMgJQsayui70iPw
             token = request.headers["Authorization"].split()[1]
 
         if not token:

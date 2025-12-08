@@ -61,7 +61,13 @@ def create_customer():
     new_customer = Customer(**data)
     db.session.add(new_customer)
     db.session.commit()
-    return create_customer_schema.jsonify(new_customer), 201
+
+    # Hide the password hash in the response
+    result = create_customer_schema.dump(new_customer)
+    if "password" in result:
+        result["password"] = "********"
+
+    return jsonify(result), 201
 
 
 # get current logged in customer
@@ -120,7 +126,7 @@ def update_customer():
         return jsonify({"Error": "Customer not found"}), 404
 
     try:
-        data = customer_schema.load(request.json, partial=True)
+        data = create_customer_schema.load(request.json, partial=True)
     except ValidationError as err:
         return jsonify(err.messages), 400
 
@@ -132,7 +138,13 @@ def update_customer():
         setattr(customer, key, value)
 
     db.session.commit()
-    return customer_schema.jsonify(customer), 200
+    #
+    # Hide the password hash in the response
+    result = create_customer_schema.dump(customer)
+    if "password" in result:
+        result["password"] = "********"
+
+    return jsonify(result), 200
 
 
 # update customer by id. Admin use only
@@ -145,7 +157,7 @@ def update_customer_by_id(id):
         return jsonify({"Error": "Customer not found"}), 404
 
     try:
-        data = customer_schema.load(request.json, partial=True)
+        data = create_customer_schema.load(request.json, partial=True)
     except ValidationError as err:
         return jsonify(err.messages), 400
 
@@ -157,4 +169,10 @@ def update_customer_by_id(id):
         setattr(customer, key, value)
 
     db.session.commit()
-    return customer_schema.jsonify(customer), 200
+
+    # Hide the password hash in the response
+    result = create_customer_schema.dump(customer)
+    if "password" in result:
+        result["password"] = "********"
+
+    return jsonify(result), 200

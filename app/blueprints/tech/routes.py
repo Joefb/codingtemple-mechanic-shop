@@ -61,9 +61,7 @@ def create_tech():
     if "password" in result:
         result["password"] = "********"
 
-    # return tech_schema.jsonify(tech), 200
     return jsonify(result), 201
-    # return create_tech_schema.jsonify(new_tech), 201
 
 
 # get tech by id
@@ -139,7 +137,6 @@ def update_tech():
     if "password" in result:
         result["password"] = "********"
 
-    # return tech_schema.jsonify(tech), 200
     return jsonify(result), 200
 
 
@@ -171,4 +168,3 @@ def update_tech_by_id(id):
         result["password"] = "********"
 
     return jsonify(result), 200
-    # return tech_schema.jsonify(tech), 200

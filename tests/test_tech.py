@@ -81,4 +81,25 @@ class TestTech(unittest.TestCase):
         self.assertIn("phone", response.json)
         self.assertIn("password", response.json)
         self.assertEqual(response.json["password"], "********")
-        # self.assertIn("id", response.json)
+        self.assertIn("id", response.json)
+
+    def test_get_tech_by_id(self):
+        response = self.client.get(
+            "/tech/1", headers={"Authorization": f"Bearer {self.token}"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["first_name"], "Firstname")
+        self.assertEqual(response.json["last_name"], "Lastname")
+        self.assertIn("id", response.json)
+        self.assertNotIn("password", response.json)
+
+    def test_get_tech_by_id_no_token(self):
+        response = self.client.get(
+            "/tech/1",
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            response.json["error"], "token missing from authorization headers"
+        )

@@ -54,6 +54,7 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(response.json["first_name"], "TestBob")
         self.assertEqual(response.json["last_name"], "TestBarker")
         self.assertIn("id", response.json)
+        self.assertEqual(response.json["password"], "********")
 
     def test_create_customer_no_token(self):
         response = self.client.post(
@@ -89,3 +90,22 @@ class TestCustomer(unittest.TestCase):
         self.assertIn("token", response.json)
         self.assertEqual(response.json["message"], "Welcome Firstname")
         self.assertIsInstance(response.json["token"], str)
+
+    def test_update_customer(self):
+        payload = {
+            "phone": "999-999-9999",
+            "first_name": "billy",
+            "password": "newpassword",
+        }
+
+        response = self.client.put(
+            "customer",
+            json=payload,
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["phone"], "999-999-9999")
+        self.assertEqual(response.json["first_name"], "billy")
+        self.assertEqual(response.json["password"], "********")
+        self.assertIn("phone", response.json)
+        self.assertIn("id", response.json)
