@@ -16,9 +16,9 @@ from app.util.auth import (
 # tech login
 @techs_bp.route("/login", methods=["POST"])
 @limiter.limit("5 per 10 minute")
-def login():
+def tech_login():
     try:
-        # get my user credentials - responsibility for my client
+        # get tech credentials - responsibility for my client
         data = login_schema.load(request.json)  # JSON -> Python
     except ValidationError as e:
         return jsonify(e.messages), 400
@@ -40,7 +40,7 @@ def login():
 
 # create tech
 @techs_bp.route("", methods=["POST"])
-@limiter.limit("5 per day")
+@limiter.limit("500 per day")
 @admin_token_required
 def create_tech():
     try:
@@ -55,7 +55,13 @@ def create_tech():
     new_tech = Tech(**data)
     db.session.add(new_tech)
     db.session.commit()
-    return create_tech_schema.jsonify(new_tech), 201
+
+    # Hide the password hash in the response
+    result = create_tech_schema.dump(new_tech)
+    if "password" in result:
+        result["password"] = "********"
+
+    return jsonify(result), 201
 
 
 # get tech by id
@@ -114,7 +120,7 @@ def update_tech():
         return jsonify({"Error": "Tech not found"}), 404
 
     try:
-        data = tech_schema.load(request.json, partial=True)
+        data = create_tech_schema.load(request.json, partial=True)
     except ValidationError as err:
         return jsonify(err.messages), 400
 
@@ -125,7 +131,13 @@ def update_tech():
         setattr(tech, key, value)
 
     db.session.commit()
-    return tech_schema.jsonify(tech), 200
+
+    # Hide the password hash in the response
+    result = create_tech_schema.dump(tech)
+    if "password" in result:
+        result["password"] = "********"
+
+    return jsonify(result), 200
 
 
 # update tech by id admin only
@@ -138,7 +150,7 @@ def update_tech_by_id(id):
         return jsonify({"Error": "Tech not found"}), 404
 
     try:
-        data = tech_schema.load(request.json, partial=True)
+        data = create_tech_schema.load(request.json, partial=True)
     except ValidationError as err:
         return jsonify(err.messages), 400
 
@@ -149,4 +161,10 @@ def update_tech_by_id(id):
         setattr(tech, key, value)
 
     db.session.commit()
-    return tech_schema.jsonify(tech), 200
+
+    # Hide the password hash in the response
+    result = create_tech_schema.dump(tech)
+    if "password" in result:
+        result["password"] = "********"
+
+    return jsonify(result), 200

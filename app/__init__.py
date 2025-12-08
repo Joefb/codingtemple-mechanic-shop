@@ -32,12 +32,13 @@ def create_app(config_name):
     app.register_blueprint(invoices_bp, url_prefix="/invoice")
     app.register_blueprint(swagger_blueprint, url_prefix=SWAGGER_URL)
 
+    # This creates the admin user if it does not exist.
+    # Needed to create customers and do other admin stuff
     with app.app_context():
         from app.models import Tech
         from werkzeug.security import generate_password_hash
 
-        # Create a admin user if not exists.
-        # Change password!!!
+        # This is a hard coded password! Change the admin password after first run!
         if not db.session.query(Tech).filter_by(last_name="admin").first():
             admin_tech = Tech(
                 first_name="admin",
