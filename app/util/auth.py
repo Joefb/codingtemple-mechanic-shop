@@ -1,10 +1,14 @@
+import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 import jose
 from functools import wraps
 from flask import request, jsonify
 
-SECRET_KEY = "super secret secrets"
+# This line is for render.com or GitHub actions
+# This first checks for the environment variable that is for render, if it doesn't exist it uses a default value
+# used for CI/CD and local development
+SECRET_KEY = os.environ.get("SECRET_KEY") or "super secret key"
 
 
 def encode_token(customer_id, position=None):
